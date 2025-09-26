@@ -1,3 +1,4 @@
+import streamlit as st
 import random
 
 # 25 soal tebak negara untuk SMP
@@ -130,29 +131,46 @@ questions = [
 ]
 
 def main():
-    print("=== KUIS TEBAK NEGARA (25 Soal SMP) ===\n")
-    random.shuffle(questions)
-    score = 0
-    
-    for i, q in enumerate(questions, start=1):
-        print(f"Soal {i}: {q['q']}")
-        for c in q["choices"]:
-            print("  ", c)
-        jawab = input("Jawaban (A/B/C/D): ").strip().upper()
-        if jawab == q["answer"]:
-            print("✔ Benar! +4 poin\n")
-            score += 4
-        else:
-            print(f"✘ Salah! Jawaban benar: {q['answer']}\n")
-    
-    print("=== HASIL AKHIR ===")
-    print(f"Skor kamu: {score} dari 100")
-    if score >= 80:
-        print("Luar biasa! Pengetahuan geografi kamu sangat bagus 🌍")
-    elif score >= 60:
-        print("Bagus, kamu cukup mengenal dunia 💪")
+    st.title("🌍 KUIS TEBAK NEGARA (25 Soal SMP)")
+    st.write("Jawablah pertanyaan berikut dengan memilih salah satu pilihan yang tersedia:")
+
+    if "questions" not in st.session_state:
+        st.session_state.questions = random.sample(questions, len(questions))  # acak soal
+        st.session_state.score = 0
+        st.session_state.current = 0
+        st.session_state.finished = False
+
+    if not st.session_state.finished:
+        q = st.session_state.questions[st.session_state.current]
+        st.subheader(f"Soal {st.session_state.current+1}")
+        st.write(q["q"])
+        answer = st.radio("Pilih jawaban:", q["choices"], key=f"q{st.session_state.current}")
+
+        if st.button("Kirim Jawaban"):
+            if answer.startswith(q["answer"]):
+                st.success("✔ Benar! +4 poin")
+                st.session_state.score += 4
+            else:
+                st.error(f"✘ Salah! Jawaban benar: {q['answer']}")
+            st.session_state.current += 1
+            if st.session_state.current >= len(st.session_state.questions):
+                st.session_state.finished = True
+            st.experimental_rerun()
+
     else:
-        print("Terus belajar mengenal negara-negara di dunia 😉")
+        st.header("=== HASIL AKHIR ===")
+        st.write(f"Skor kamu: **{st.session_state.score}** dari 100")
+        if st.session_state.score >= 80:
+            st.success("🌟 Luar biasa! Pengetahuan geografi kamu sangat bagus!")
+        elif st.session_state.score >= 60:
+            st.info("💪 Bagus, kamu cukup mengenal dunia.")
+        else:
+            st.warning("😉 Terus belajar mengenal negara-negara di dunia.")
+
+        if st.button("Main Lagi 🔄"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
